@@ -1,6 +1,5 @@
 import os
 import sqlite3
-import pandas as pd
 import openpyxl
 import re
 
@@ -304,19 +303,15 @@ def upload():
                     entrada_real = horarios[0]
                     saida_real = horarios[-1]
 
-                    # RESET
                     extra = 0
                     atraso = 0
 
-                    # EXTRA POR ENTRAR ANTES
                     if entrada_real < entrada_cfg:
                         extra += int((entrada_cfg - entrada_real).total_seconds() / 60)
 
-                    # ATRASO POR ENTRAR DEPOIS
                     if entrada_real > entrada_cfg:
                         atraso += int((entrada_real - entrada_cfg).total_seconds() / 60)
 
-                    # SOMENTE CALCULAR SAÍDA SE EXISTIR SAÍDA
                     if status != "saida_faltando":
 
                         if saida_real > saida_cfg:
@@ -325,7 +320,6 @@ def upload():
                         if saida_real < saida_cfg:
                             atraso += int((saida_cfg - saida_real).total_seconds() / 60)
 
-                        # INTERVALO DE ALMOÇO
                         if len(horarios) >= 4:
 
                             almoco_saida = horarios[1]
