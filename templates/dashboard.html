@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Registros</h2>
+
+<div class="accordion">
+
+    {% for nome, registros in funcionarios.items() %}
+
+    <div class="funcionario">
+
+        <h3 onclick="toggle({{loop.index}})" class="funcionario-titulo">
+            {{nome}}
+            <span class="seta" id="seta{{loop.index}}">
+                ▼
+            </span>
+        </h3>
+
+        <div class="resumo">
+            <span class="extra">
+                Extras: {{ resumo[nome].extra | tempo }}
+            </span>
+
+            <span class="atraso">
+                Devido: {{ resumo[nome].atraso | tempo }}
+            </span>
+        </div>
+
+        <div class="funcionario-body" id="func{{loop.index}}" style="display:none;">
+
+            <table>
+                <tr>
+                    <th>Data</th>
+                    <th>Batidas</th>
+                    <th>Trabalhado</th>
+                    <th>Extra</th>
+                    <th>Atraso</th>
+                </tr>
+                {% for d in registros %}
+                <tr>
+                    <td>{{ d.data.split('-')[2] }}/{{ d.data.split('-')[1] }}/{{ d.data.split('-')[0] }}</td>
+                    <td class="batidas">
+                        {{ d.batidas.replace('\n',' ') }}
+                    </td>
+
+                    <td>
+                        {{d.minutos_trabalhados}} min
+
+                        {% set bat = d.batidas.replace('\n',' ').split(' ') %}
+                        {% set qtd = bat | length %}
+
+                        {% if qtd == 3 %}
+                        {% set t1 = bat[1] %}
+                        {% set t2 = bat[2] %}
+
+                        {% set h1 = t1.split(':')[0]|int %}
+                        {% set m1 = t1.split(':')[1]|int %}
+                        {% set h2 = t2.split(':')[0]|int %}
+                        {% set m2 = t2.split(':')[1]|int %}
+
+                        {% set diff = (h2*60+m2) - (h1*60+m1) %}
+
+                        {% if diff < 90 %} <br><span style="color:#ef4444;font-size:12px">
+                                ⚠ saída não registrada
+                            </span>
+                            {% else %}
+                            <br><span style="color:#f59e0b;font-size:12px">
+                                ⚠ volta do almoço não registrada
+                            </span>
+                            {% endif %}
+                            {% endif %}
+                    </td>
+
+                    <td class="extra">{{ d.minutos_extra | tempo }}</td>
+                    <td class="atraso">{{ d.atraso | tempo }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+
+<script>
+    function toggle(id) {
+        const el = document.getElementById("func" + id)
+        const seta = document.getElementById("seta" + id)
+
+        if (el.style.display === "none" || el.style.display === "") {
+
+            el.style.display = "block"
+            seta.style.transform = "rotate(180deg)"
+
+        } else {
+
+            el.style.display = "none"
+            seta.style.transform = "rotate(0deg)"
+
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Funcionários</h2>
+
+<form method="POST" action="/funcionarios/add">
+
+    <input name="nome" placeholder="Nome">
+    <label>Entrada</label>
+    <input name="entrada" type="time">
+    <label>Saída</label>
+    <input name="saida" type="time">
+    <label>Almoço</label>
+    <select name="almoco">
+        <option value="60">1 hora (CLT)</option>
+        <option value="30">30 minutos (Estágio)</option>
+    </select>
+
+    <button type="submit">Adicionar</button>
+
+</form>
+<hr>
+<table>
+    <tr>
+        <th>Nome</th>
+        <th>Entrada</th>
+        <th>Saída</th>
+        <th>Almoço</th>
+        <th>Ações</th>
+    </tr>
+    {% for f in lista %}
+    <tr>
+        <td>{{f.nome}}</td>
+        <td>{{f.entrada}}</td>
+        <td>{{f.saida}}</td>
+        <td>{{f.almoco}} min</td>
+        <td>
+            <a class="btn-delete" href="/funcionarios/delete/{{f.id}}">
+                Excluir
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

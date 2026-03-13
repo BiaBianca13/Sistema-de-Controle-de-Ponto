@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sistema de Ponto</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+</head>
+
+<body>
+    <div class="menu">
+        <img src="/static/logo.png" class="logo">
+        <span class="titulo-sistema">Sistema de Ponto</span>
+        <div class="menu-links">
+            <a href="/">Dashboard</a>
+            <a href="/upload">Importar Excel</a>
+            <a href="/funcionarios">Funcionários</a>
+        </div>
+    </div>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+
+</html>

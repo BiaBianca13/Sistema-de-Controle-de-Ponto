@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="upload-container">
+    <div class="upload-card">
+        <h2>Importar arquivo de ponto</h2>
+        <form method="POST" enctype="multipart/form-data" class="upload-form">
+            <input type="file" name="arquivo" required>
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
