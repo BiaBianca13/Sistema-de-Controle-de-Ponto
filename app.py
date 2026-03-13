@@ -2,6 +2,7 @@ import os
 import sqlite3
 import openpyxl
 import re
+import psycopg2.extras
 
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash
@@ -42,6 +43,7 @@ def p():
 def conectar():
     if DATABASE_URL:
         conn = psycopg2.connect(DATABASE_URL)
+        conn.cursor_factory = psycopg2.extras.RealDictCursor
         return conn
     else:
         conn = sqlite3.connect(DB)
@@ -407,14 +409,26 @@ def add_func():
     saida = request.form["saida"]
     almoco = request.form["almoco"]
 
-    conn = conectar()
+    conn = conectar()   
     cur = conn.cursor()
 
-    cur.execute(f"""
-    INSERT INTO funcionarios
-    (nome,entrada,saida,almoco,valor_hora)
-    VALUES({p()},{p()},{p()},{p()},{p()})
-    """,(nome,entrada,saida,almoco,0))
+    try:
+        if DATABASE_URL:
+            cur.execute(f"""
+            INSERT INTO funcionarios
+            (nome,entrada,saida,almoco,valor_hora)
+            VALUES({p()},{p()},{p()},{p()},{p()})
+            ON CONFLICT (nome) DO NOTHING
+            """,(nome,entrada,saida,almoco,0))
+        else:
+            cur.execute(f"""
+            INSERT OR IGNORE INTO funcionarios
+            (nome,entrada,saida,almoco,valor_hora)
+            VALUES({p()},{p()},{p()},{p()},{p()})
+            """,(nome,entrada,saida,almoco,0))
+    except Exception as e:
+        print(e)
+
 
     conn.commit()
     conn.close()
