@@ -40,7 +40,6 @@ def p():
     return "?"
 
 def conectar():
-
     if DATABASE_URL:
         conn = psycopg2.connect(DATABASE_URL)
         return conn
@@ -80,6 +79,8 @@ def criar_banco():
 
     conn.commit()
     conn.close()
+
+criar_banco()
 
 
 def extrair_horas(texto):
@@ -407,5 +408,4 @@ def deletar_funcionario(id):
     return redirect("/funcionarios")
 
 if __name__ == "__main__":
-    criar_banco()
     app.run(host="0.0.0.0", port=5000)
