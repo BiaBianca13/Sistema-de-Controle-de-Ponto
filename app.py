@@ -52,33 +52,60 @@ def criar_banco():
     conn = conectar()
     cur = conn.cursor()
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS funcionarios(
-        id SERIAL PRIMARY KEY,
-        nome TEXT UNIQUE,
-        entrada TEXT,
-        saida TEXT,
-        almoco INTEGER,
-        valor_hora REAL
-    )
-    """)
+    if DATABASE_URL:
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS funcionarios(
+            id SERIAL PRIMARY KEY,
+            nome TEXT UNIQUE,
+            entrada TEXT,
+            saida TEXT,
+            almoco INTEGER,
+            valor_hora REAL
+        )
+        """)
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS registros(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        funcionario TEXT,
-        data TEXT,
-        batidas TEXT,
-        minutos_trabalhados INTEGER,
-        minutos_extra INTEGER,
-        atraso INTEGER,
-        debito INTEGER,
-        falta INTEGER
-    )
-    """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS registros(
+            id SERIAL PRIMARY KEY,
+            funcionario TEXT,
+            data TEXT,
+            batidas TEXT,
+            minutos_trabalhados INTEGER,
+            minutos_extra INTEGER,
+            atraso INTEGER,
+            debito INTEGER,
+            falta INTEGER
+        )
+        """)
+    else:
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS funcionarios(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT UNIQUE,
+            entrada TEXT,
+            saida TEXT,
+            almoco INTEGER,
+            valor_hora REAL
+        )
+        """)
+
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS registros(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            funcionario TEXT,
+            data TEXT,
+            batidas TEXT,
+            minutos_trabalhados INTEGER,
+            minutos_extra INTEGER,
+            atraso INTEGER,
+            debito INTEGER,
+            falta INTEGER
+        )
+        """)
 
     conn.commit()
     conn.close()
+
 
 criar_banco()
 
