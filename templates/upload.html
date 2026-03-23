@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    /* Cabeçalho da Página */
+    .page-header {
+        margin-bottom: 30px;
+    }
+    
+    .page-title {
+        color: #1b5e20;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    /* Cartão de Upload Centralizado */
+    .upload-card {
+        background: #ffffff;
+        border: 1px solid #c8e6c9;
+        border-radius: 14px;
+        padding: 40px;
+        max-width: 600px;
+        margin: 40px auto; /* Centraliza na tela */
+        box-shadow: 0 4px 15px rgba(27, 94, 32, 0.03);
+        text-align: center;
+    }
+
+    /* Área de Seleção do Arquivo (Borda tracejada) */
+    .upload-area {
+        border: 2px dashed #81c784;
+        border-radius: 12px;
+        padding: 50px 20px;
+        background-color: #f4fbf5;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 25px;
+        display: block;
+    }
+
+    .upload-area:hover {
+        background-color: #e8f5e9;
+        border-color: #4caf50;
+        transform: scale(1.01);
+    }
+
+    .upload-icon {
+        color: #4caf50;
+        margin-bottom: 15px;
+    }
+
+    .upload-text {
+        color: #2e7d32;
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+    }
+
+    .upload-subtext {
+        color: #64748b;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    /* Esconde o input padrão feio do navegador */
+    input[type="file"] {
+        display: none;
+    }
+
+    /* Caixa que exibe o nome do arquivo selecionado */
+    .file-name-display {
+        display: none; /* Só aparece quando escolhe um arquivo */
+        background: #e8f5e9;
+        color: #1b5e20;
+        padding: 14px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        font-size: 15px;
+        font-weight: 600;
+        border: 1px solid #c8e6c9;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    /* Botão Enviar */
+    .btn-submit {
+        background-color: #22c55e;
+        color: white;
+        border: none;
+        padding: 16px 30px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 16px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s ease;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+        background-color: #16a34a;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-submit:disabled {
+        background-color: #cbd5e1;
+        cursor: not-allowed;
+        box-shadow: none;
+        color: #f8fafc;
+    }
+</style>
+
+<div class="page-header">
+    <h2 class="page-title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #22c55e;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        Importar Arquivo de Ponto
+    </h2>
+</div>
+
+<div class="upload-card">
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        
+        <label for="arquivo" class="upload-area" id="drop-area">
+            <svg class="upload-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg>
+            <p class="upload-text">Clique aqui para selecionar a planilha</p>
+            <p class="upload-subtext">Formatos suportados: Excel (.xlsx, .xls)</p>
+        </label>
+        
+        <input type="file" name="arquivo" id="arquivo" accept=".xlsx, .xls" required onchange="mostrarNomeArquivo(this)">
+        
+        <div id="file-name-container" class="file-name-display">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span id="file-name">Nenhum arquivo</span>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btn-submit" disabled>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            Importar e Processar Dados
+        </button>
+    </form>
+</div>
+
+<script>
+    // Script simples para mostrar o nome do arquivo selecionado e liberar o botão
+    function mostrarNomeArquivo(input) {
+        const container = document.getElementById('file-name-container');
+        const nameSpan = document.getElementById('file-name');
+        const btnSubmit = document.getElementById('btn-submit');
+
+        if (input.files && input.files.length > 0) {
+            nameSpan.textContent = input.files[0].name; // Pega o nome do arquivo
+            container.style.display = 'flex'; // Mostra a caixa verde
+            btnSubmit.disabled = false; // Libera o botão de Enviar
+        } else {
+            container.style.display = 'none';
+            btnSubmit.disabled = true;
+        }
+    }
+</script>
+
+{% endblock %}

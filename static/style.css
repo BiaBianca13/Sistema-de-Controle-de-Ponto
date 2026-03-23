@@ -1,0 +1,274 @@
+:root {
+    --verde-logo: #008607;
+    --verde-hover: #006405;
+}
+
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    color: #1f2937;
+}
+
+
+.menu {
+    background: white;
+    padding: 12px 40px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.menu-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo {
+    height: 55px;
+}
+
+.titulo-sistema {
+    font-size: 15px;
+    font-weight: 700;
+    color: #008607;
+    margin-right: 25px;
+    font-family: Verdana;
+}
+
+.menu-links {
+    display: flex;
+    gap: 25px;
+}
+
+.menu-links a {
+    text-decoration: none;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.menu-links a:hover {
+    color: #00b050;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 30px 20px;
+}
+
+h2 {
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.titulo-sistema {
+    color: var(--verde-logo);
+    font-family: 'Arial Black', sans-serif;
+}
+
+.funcionario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border-left: 6px solid var(--verde-logo);
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.btn-relatorio {
+    background: var(--verde-logo);
+    color: white;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.btn-relatorio:hover {
+    background: var(--verde-hover);
+}
+
+.upload-box {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+input,
+select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: white;
+}
+
+button {
+    background: #00b050;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #009140;
+}
+
+.funcionario {
+    background: white;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 15px;
+}
+
+.funcionario-titulo {
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.resumo {
+    display: flex;
+    gap: 20px;
+    font-weight: 600;
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+.extra {
+    color: #00b050;
+}
+
+.atraso {
+    color: #f59e0b;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+th {
+    background: #00b050;
+    color: white;
+    padding: 9px;
+    text-align: left;
+}
+
+td {
+    padding: 9px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+tr:hover {
+    background: #f9fafb;
+}
+
+.batidas {
+    font-family: monospace;
+}
+
+.ponto-alerta {
+    font-size: 12px;
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.funcionarios-box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.btn-delete {
+    background: #ef4444;
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: white;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+}
+
+.form-func {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.upload-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 80px;
+}
+
+.upload-card {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    width: 420px;
+}
+
+.upload-card h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.upload-form {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+.upload-form input[type="file"] {
+    border: 1px solid #d1d5db;
+    padding: 6px;
+    border-radius: 6px;
+}
+
+.funcionario-titulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.funcionario {
+    transition: all 0.2s ease;
+}
+
+.funcionario:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.seta {
+    font-size: 14px;
+    color: #6b7280;
+    transition: 0.25s;
+}

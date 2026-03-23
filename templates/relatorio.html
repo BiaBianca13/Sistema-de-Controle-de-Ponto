@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    /* ==================================================== */
+    /* Estilos Visuais para a Tela (Navegador)              */
+    /* ==================================================== */
+    .print-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .btn-imprimir { background: #22c55e; color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2); }
+    .btn-imprimir:hover { background: #16a34a; transform: translateY(-2px); }
+    
+    .relatorio-container { 
+        background: white; 
+        padding: 40px; 
+        border-radius: 12px; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+        border: 1px solid #e8f5e9; 
+    }
+
+    .print-only-header { display: none; }
+
+    .week-title { color: #2e7d32; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-top: 0; }
+    
+    .table-rel { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
+    .table-rel th { background: #f4fbf5; color: #1b5e20; border: 1px solid #c8e6c9; padding: 10px; text-align: center; }
+    .table-rel td { border: 1px solid #c8e6c9; padding: 8px; text-align: center; color: #334155; }
+    .row-sabado td { background-color: #f8fafc; color: #94a3b8; }
+    
+    .week-counters { background: #f4fbf5; padding: 15px; border-radius: 8px; display: flex; justify-content: space-around; border: 1px solid #c8e6c9; font-size: 14px; margin-bottom: 30px; }
+    
+    /* Quadro Final (Consolidado) */
+    .final-counters { margin-top: 30px; background: #e8f5e9; padding: 25px; border-radius: 10px; border: 2px solid #c8e6c9; display: flex; flex-direction: column; gap: 20px; }
+    .fc-row { display: flex; justify-content: space-around; align-items: center; text-align: center; }
+    .fc-item { display: flex; flex-direction: column; align-items: center; }
+    .fc-item span { color: #1b5e20; font-size: 13px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px; }
+    .fc-item strong { font-size: 18px; }
+    .fc-divider { width: 100%; height: 2px; background: #c8e6c9; border-radius: 2px; }
+    .fc-divider-vertical { width: 2px; height: 50px; background: #c8e6c9; border-radius: 2px; }
+
+    .signatures { display: flex; justify-content: space-around; margin-top: 80px; text-align: center; page-break-inside: avoid; }
+    .signature-box { width: 40%; }
+    .signature-line { width: 100%; border-top: 1px solid #1b5e20; margin: 0 auto; padding-top: 12px; font-weight: bold; color: #1b5e20; font-size: 15px; text-transform: uppercase; }
+
+    /* ==================================================== */
+    /* REGRAS MÁGICAS PARA IMPRESSÃO - GARANTIA DE 1 FOLHA  */
+    /* ==================================================== */
+    @media print {
+        @page { size: A4 portrait; margin: 0 !important; }
+        
+        body { background: white !important; padding: 8mm !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        
+        /* AQUI ESTÁ A MÁGICA: O cabeçalho da tela (com o nome) desaparece na impressão! */
+        .sidebar, .print-header { display: none !important; }
+        .main-content { padding: 0 !important; margin: 0 !important; background: white !important;}
+        
+        .relatorio-container { 
+            box-shadow: none !important; 
+            border: none !important; 
+            padding: 0 !important; 
+            background: white !important; 
+            /* Zoom ajustado para comportar o novo espaço de assinatura gigante */
+            zoom: 0.66 !important; 
+        }
+
+        .print-only-header { display: flex !important; justify-content: center !important; align-items: center !important; border-bottom: 2px solid #1b5e20 !important; padding-bottom: 8px !important; margin-bottom: 12px !important; width: 100% !important; position: relative !important; }
+        .print-only-header img { position: absolute !important; left: 0 !important; max-height: 55px !important; width: auto !important; }
+        .print-title { text-align: center !important; width: 100% !important; }
+        .print-title h2 { margin: 0 !important; color: #1b5e20 !important; font-size: 24px !important; font-weight: 800 !important; text-transform: uppercase !important; }
+        
+        /* ESPAÇAMENTOS MILIMETRICAMENTE CALCULADOS */
+        .week-title { font-size: 14px !important; margin: 8px 0 4px 0 !important; padding-bottom: 2px !important; }
+        .table-rel { margin-bottom: 8px !important; }
+        .table-rel th, .table-rel td { padding: 4px !important; font-size: 12px !important; } 
+        .table-rel th { background: #f4fbf5 !important; color: #1b5e20 !important; }
+        
+        .week-counters { padding: 6px !important; margin-bottom: 15px !important; font-size: 12px !important; border-color: #c8e6c9 !important; background: #f4fbf5 !important; }
+        
+        .final-counters { margin-top: 15px !important; padding: 15px !important; gap: 12px !important; border-color: #c8e6c9 !important; background: #e8f5e9 !important; }
+        .fc-item span { font-size: 12px !important; margin-bottom: 4px !important; }
+        .fc-item strong { font-size: 16px !important; }
+        .fc-divider-vertical { height: 40px !important; }
+        
+        /* AUMENTO DO ESPAÇO DA ASSINATURA À CANETA */
+        .signatures { margin-top: 65px !important; margin-bottom: 0 !important;} 
+        .signature-line { font-size: 14px !important; padding-top: 10px !important; }
+        
+        table, .week-counters, .final-counters, .signatures { page-break-inside: avoid; }
+    }
+</style>
+
+<div class="print-header">
+    <h2 style="color: #1b5e20; margin: 0; font-size: 26px;">
+        Relatório de Ponto: <span style="color: #16a34a;">{{ nome }}</span>
+    </h2>
+    <button class="btn-imprimir" onclick="window.print()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        Imprimir
+    </button>
+</div>
+
+<div class="relatorio-container">
+    
+    <div class="print-only-header">
+        <img src="{{ url_for('static', filename='Logo (para fundos brancos).png') }}" alt="Consig Tech">
+        <div class="print-title">
+            <h2>Relatório de Ponto</h2>
+        </div>
+    </div>
+
+    {% for chave, s in semanas.items() %}
+    <h3 class="week-title">Semana {{ chave.split('-W')[1] }}</h3>
+    
+    <table class="table-rel">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Dia</th>
+                <th>Batidas</th>
+                <th>Trabalhado</th>
+                <th>Saldo Diário</th>
+                <th>Observações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in s.dias %}
+            <tr class="{% if d.falta %}row-falta{% elif d.is_sabado %}row-sabado{% endif %}" style="{% if d.falta %}background-color: #ffebee;{% endif %}">
+                <td>{{ d.data }}</td>
+                <td>{{ d.dia_semana }}</td>
+                <td>{% if d.falta %}<strong>FALTA</strong>{% else %}{{ d.batidas }}{% endif %}</td>
+                <td>{{ d.trabalhado | tempo }}</td>
+                
+                {% if d.is_sabado %}
+                    <td style="font-weight: bold; color: #94a3b8; font-size: 16px;">-</td>
+                    <td style="color: #0284c7; font-weight: 800; font-size: 12px;">JÁ REMUNERADO</td>
+                {% else %}
+                    {% set cor_saldo = '#16a34a' if d.saldo_diario > 0 else ('#dc2626' if d.saldo_diario < 0 else '#475569') %}
+                    <td style="font-weight: bold; color: {{ cor_saldo }};">{{ d.saldo_diario | tempo }}</td>
+                    <td style="color: #84cc16;">{% if not d.falta %}{{ d.observacao }}{% endif %}</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="week-counters">
+        <span><strong style="color: #1b5e20;">Horas Extras (+):</strong> <span style="color: #16a34a;">{{ s.horas_positivas | tempo }}</span></span>
+        
+        <span><strong style="color: #1b5e20;">Horas Negativas (-):</strong> <span style="color: #dc2626;">{{ s.horas_negativas | tempo }}</span></span>
+        
+        <span><strong style="color: #1b5e20;">Saldo da Semana:</strong> 
+            {% set cor_sem = '#16a34a' if s.saldo_semana > 0 else ('#dc2626' if s.saldo_semana < 0 else '#475569') %}
+            <span style="color: {{ cor_sem }}; font-weight: bold;">{{ s.saldo_semana | tempo }}</span>
+        </span>
+    </div>
+    {% endfor %}
+
+    <div class="final-counters">
+        
+        <div class="fc-row">
+            <div class="fc-item">
+                <span>Obrigatório no Mês</span>
+                <strong style="color: #475569;">{{ total_esperado_mes | tempo }}</strong>
+            </div>
+            <div class="fc-item">
+                <span>Total Trabalhado no Mês</span>
+                <strong style="color: #475569;">{{ total_trabalhado_mes | tempo }}</strong>
+            </div>
+        </div>
+
+        <div class="fc-divider"></div>
+
+        <div class="fc-row" style="justify-content: center; gap: 50px;">
+            
+            {% if total_trabalhado_mes > total_esperado_mes %}
+            <div class="fc-item">
+                <span>Total Horas Extras (+)</span>
+                <strong style="color: #16a34a;">{{ total_positivo | tempo }}</strong>
+            </div>
+            
+            <div class="fc-divider-vertical"></div>
+            {% endif %}
+            
+            <div class="fc-item">
+                <span>Saldo dentro do horário solicitado pela empresa</span>
+                {% set cor_geral = '#16a34a' if total_restante > 0 else ('#dc2626' if total_restante < 0 else '#475569') %}
+                <strong style="color: {{ cor_geral }}; font-size: 20px;">{{ total_restante | tempo }}</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="signatures">
+        <div class="signature-box">
+            <div class="signature-line">Colaborador</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">Responsável pelo RH</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

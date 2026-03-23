@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Ponto - Consig Tech</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='rocket.png') }}">
+    <style>
+        body, html { margin: 0; padding: 0; background-color: #f4fbf5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .app-layout { display: flex; min-height: 100vh; width: 100%; }
+
+        .sidebar {
+            width: 260px;
+            background: #e8f5e9; 
+            color: #1b5e20; 
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #c8e6c9;
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        .sidebar-header {
+            padding: 35px 20px 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid #c8e6c9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .sidebar-logo { max-width: 160px; height: auto; display: block; }
+        .system-subtitle { font-size: 12px; color: #2e7d32; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
+
+        .sidebar-nav { padding: 25px 0; display: flex; flex-direction: column; gap: 5px; }
+
+        .nav-link {
+            padding: 16px 25px;
+            color: #2e7d32;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .nav-link svg { color: #4caf50; transition: color 0.2s ease; }
+        .nav-link:hover, .nav-link.active { background: #c8e6c9; color: #1b5e20; border-left-color: #1b5e20; }
+        .nav-link:hover svg, .nav-link.active svg { color: #1b5e20; }
+        .nav-link.active { font-weight: 600; }
+
+        .sidebar-footer { margin-top: auto; padding: 20px; text-align: center; }
+        .sidebar-version { font-size: 12px; color: #4caf50; font-weight: 500; }
+
+        /* Área de Conteúdo Central */
+        .main-content {
+            flex: 1; padding: 40px 50px; background: #f4fbf5; box-sizing: border-box; overflow-y: auto; height: 100vh;
+        }
+
+        /* Modal Calculadora */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(27, 94, 32, 0.4); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .calc-container { background: #ffffff; width: 320px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(27, 94, 32, 0.25); transform: scale(0.9); transition: transform 0.3s ease; }
+        .modal-overlay.active .calc-container { transform: scale(1); }
+        .calc-header { background: #e8f5e9; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c8e6c9; }
+        .calc-header h3 { margin: 0; color: #1b5e20; font-size: 16px; display: flex; align-items: center; gap: 8px;}
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #81c784; transition: color 0.2s; }
+        .close-btn:hover { color: #ef4444; }
+        .calc-display { background: #1b5e20; color: #fff; font-size: 36px; text-align: right; padding: 25px 20px; margin: 0; word-wrap: break-word; min-height: 90px; display: flex; align-items: flex-end; justify-content: flex-end; font-family: 'Courier New', Courier, monospace; }
+        .calc-keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #c8e6c9; }
+        .calc-btn { border: none; background: #ffffff; padding: 22px 0; font-size: 18px; cursor: pointer; font-weight: 600; color: #1b5e20; transition: background 0.1s; }
+        .calc-btn:hover { background: #f1f8f2; }
+        .calc-btn.op { background: #e8f5e9; color: #2e7d32; font-size: 20px; }
+        .calc-btn.op:hover { background: #c8e6c9; }
+        .calc-btn.eq { background: #22c55e; color: white; grid-column: span 2; font-size: 22px; }
+        .calc-btn.eq:hover { background: #16a34a; }
+        .calc-btn.clear { color: #ef4444; }
+
+        @media (max-width: 900px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; flex-direction: row; justify-content: space-between; padding: 10px 20px; border-right: none; border-bottom: 1px solid #c8e6c9;}
+            .sidebar-header { border: none; padding: 0; flex-direction: row; gap: 15px; }
+            .sidebar-logo { max-height: 35px; }
+            .system-subtitle { display: none; }
+            .sidebar-nav { flex-direction: row; padding: 0; gap: 5px; }
+            .nav-link { padding: 10px; font-size: 14px; }
+            .sidebar-footer { display: none; }
+            .main-content { padding: 20px; height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logotipo Consig Tech" class="sidebar-logo">
+            <span class="system-subtitle">Sistema de Ponto</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="/" class="nav-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                Visão Geral
+            </a>
+            <a href="/upload" class="nav-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Importar Excel
+            </a>
+            <a href="/funcionarios" class="nav-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Funcionários
+            </a>
+            <a href="/gerenciar-uploads" class="nav-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                Meus Uploads
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="sidebar-version">v2.0</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div style="background: #e8f5e9; color: #1b5e20; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c8e6c9;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<div class="modal-overlay" id="calcModal" onclick="fecharCalculadoraFora(event)">
+    <div class="calc-container">
+        <div class="calc-header">
+            <h3>🧮 Calculadora RH</h3>
+            <button class="close-btn" onclick="fecharCalculadora()">&times;</button>
+        </div>
+        <div class="calc-display" id="calcDisplay">0</div>
+        <div class="calc-keys">
+            <button class="calc-btn clear" onclick="calcClear()">C</button>
+            <button class="calc-btn op" onclick="calcAdd('(')">(</button>
+            <button class="calc-btn op" onclick="calcAdd(')')">)</button>
+            <button class="calc-btn op" onclick="calcAdd('/')">÷</button>
+            <button class="calc-btn" onclick="calcAdd('7')">7</button>
+            <button class="calc-btn" onclick="calcAdd('8')">8</button>
+            <button class="calc-btn" onclick="calcAdd('9')">9</button>
+            <button class="calc-btn op" onclick="calcAdd('*')">×</button>
+            <button class="calc-btn" onclick="calcAdd('4')">4</button>
+            <button class="calc-btn" onclick="calcAdd('5')">5</button>
+            <button class="calc-btn" onclick="calcAdd('6')">6</button>
+            <button class="calc-btn op" onclick="calcAdd('-')">−</button>
+            <button class="calc-btn" onclick="calcAdd('1')">1</button>
+            <button class="calc-btn" onclick="calcAdd('2')">2</button>
+            <button class="calc-btn" onclick="calcAdd('3')">3</button>
+            <button class="calc-btn op" onclick="calcAdd('+')">+</button>
+            <button class="calc-btn" onclick="calcAdd('0')">0</button>
+            <button class="calc-btn" onclick="calcAdd('.')">,</button>
+            <button class="calc-btn eq" onclick="calcResult()">=</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let expressao = "";
+    const display = document.getElementById("calcDisplay");
+    function abrirCalculadora() { document.getElementById('calcModal').classList.add('active'); }
+    function fecharCalculadora() { document.getElementById('calcModal').classList.remove('active'); }
+    function fecharCalculadoraFora(event) { if (event.target === document.getElementById('calcModal')) { fecharCalculadora(); } }
+    function calcAdd(valor) { if (expressao === "Erro") expressao = ""; expressao += valor; atualizarDisplay(); }
+    function calcClear() { expressao = ""; display.innerText = "0"; }
+    function calcResult() {
+        try { let res = eval(expressao); if (!Number.isInteger(res)) res = res.toFixed(2); expressao = res.toString(); atualizarDisplay(); }
+        catch (e) { expressao = "Erro"; display.innerText = expressao; expressao = ""; }
+    }
+    function atualizarDisplay() { display.innerText = expressao.replace(/\*/g, '×').replace(/\//g, '÷') || "0"; }
+</script>
+</body>
+</html>

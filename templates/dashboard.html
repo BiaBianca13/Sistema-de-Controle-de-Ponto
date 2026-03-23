@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    /* Ocultar a barra superior antiga se ainda houver resquícios */
+    header, .navbar, .top-bar { display: none !important; }
+
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    
+    /* Título em Verde Escuro */
+    .title-registros { color: #1b5e20; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+    
+    .toolbar { display: flex; gap: 15px; margin-bottom: 35px; flex-wrap: wrap; }
+    .search-wrapper { flex-grow: 1; position: relative; min-width: 250px; }
+    .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #81c784; font-size: 18px; }
+    
+    .input-search {
+        width: 100%; padding: 16px 20px 16px 50px; border: 1px solid #c8e6c9; border-radius: 12px;
+        font-size: 15px; color: #1b5e20; box-sizing: border-box; background-color: #ffffff;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 0.3s ease;
+    }
+    .input-search:focus { outline: none; border-color: #22c55e; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15); }
+
+    /* Botão Calculadora Verde Vibrante Consig Tech */
+    .btn-calculadora {
+        background-color: #22c55e; color: white; border: none; width: 54px; height: 54px;
+        border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center;
+        box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2); transition: all 0.2s ease;
+    }
+    .btn-calculadora:hover { background-color: #16a34a; transform: translateY(-2px); box-shadow: 0 6px 8px -1px rgba(34, 197, 94, 0.3); }
+
+    .funcionario-card {
+        background: white; border: 1px solid #e8f5e9; border-radius: 14px; margin-bottom: 16px;
+        padding: 24px 30px; display: flex; justify-content: space-between; align-items: center;
+        transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .funcionario-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(27, 94, 32, 0.08); border-color: #c8e6c9; }
+    
+    .card-info h3 { margin: 0 0 8px 0; color: #1b5e20; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-info p { margin: 0; color: #475569; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    
+    /* Botão Relatório Verde Vibrante */
+    .btn-relatorio {
+        background: #22c55e; color: white; padding: 14px 24px; text-decoration: none; border-radius: 10px;
+        font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s;
+    }
+    .btn-relatorio:hover { background: #16a34a; }
+
+    @media (max-width: 600px) {
+        .funcionario-card { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .btn-relatorio { width: 100%; justify-content: center; }
+    }
+</style>
+
+<div class="dashboard-header">
+    <h2 class="title-registros">Visão Geral dos Registros</h2>
+</div>
+
+<div class="toolbar">
+    <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="pesquisaNome" class="input-search" onkeyup="filtrarNomes()" placeholder="Buscar colaborador por nome...">
+    </div>
+    
+    <button class="btn-calculadora" onclick="abrirCalculadora()" title="Abrir Calculadora">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line>
+            <line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path>
+            <path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path>
+        </svg>
+    </button>
+</div>
+
+<div id="lista-funcionarios">
+    {% for nome, dados in resumo|dictsort %}
+    <div class="funcionario-card" data-nome="{{ nome }}">
+        <div class="card-info">
+            <h3>{{ nome }}</h3>
+            <p>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #81c784;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Saldo Banco de Horas: {{ dados.saldo | tempo }}
+            </p>
+        </div>
+        <div>
+            <a href="/relatorio/{{ nome }}" class="btn-relatorio">📄 Visualizar Relatório</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    function filtrarNomes() {
+        let input = document.getElementById('pesquisaNome');
+        let filter = input.value.toUpperCase();
+        let lista = document.getElementById('lista-funcionarios');
+        let cards = lista.getElementsByClassName('funcionario-card');
+
+        for (let i = 0; i < cards.length; i++) {
+            let nome = cards[i].getAttribute('data-nome').toUpperCase();
+            if (nome.indexOf(filter) > -1) {
+                cards[i].style.display = "flex"; 
+            } else {
+                cards[i].style.display = "none"; 
+            }
+        }
+    }
+</script>
+
+{% endblock %}

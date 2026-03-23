@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .page-title { color: #1b5e20; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 12px; }
+
+    .form-card { background: #ffffff; border: 1px solid #c8e6c9; border-radius: 14px; padding: 30px; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(27, 94, 32, 0.03); }
+    .form-card h3 { margin: 0 0 20px 0; color: #2e7d32; font-size: 18px; font-weight: 700; }
+    .form-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 20px; align-items: end; }
+    
+    .input-group { display: flex; flex-direction: column; gap: 8px; }
+    .input-group label { font-size: 13px; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input, .form-select { padding: 14px 16px; border: 1px solid #c8e6c9; border-radius: 10px; font-size: 15px; color: #1b5e20; background-color: #f4fbf5; transition: all 0.3s ease; outline: none; }
+    .form-input:focus, .form-select:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); background-color: #ffffff; }
+
+    .btn-add { background-color: #22c55e; color: white; border: none; padding: 14px 24px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; height: 50px; }
+    .btn-add:hover { background-color: #16a34a; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3); }
+
+    .table-card { background: #ffffff; border: 1px solid #e8f5e9; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+    .emp-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .emp-table th { background: #e8f5e9; color: #1b5e20; padding: 16px 20px; font-size: 14px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #c8e6c9; }
+    .emp-table td { padding: 16px 20px; color: #334155; font-size: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .emp-table tr:hover { background-color: #f4fbf5; }
+    .emp-name { font-weight: 700; color: #1b5e20; }
+    
+    .badge-time { background: #f1f5f9; padding: 6px 12px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #475569; border: 1px solid #e2e8f0; }
+    .btn-delete { color: #ef4444; background: #fef2f2; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #fee2e2; }
+    .btn-delete:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+    @media (max-width: 1200px) { .form-grid { grid-template-columns: 1fr 1fr 1fr; } .btn-add { grid-column: span 3; justify-content: center; } }
+</style>
+
+<div class="page-header">
+    <h2 class="page-title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #22c55e;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Gestão de Funcionários
+    </h2>
+</div>
+
+<div class="form-card">
+    <h3>Adicionar Novo Colaborador</h3>
+    <form action="/funcionarios/add" method="POST" class="form-grid">
+        <div class="input-group">
+            <label>Nome Completo</label>
+            <input type="text" name="nome" class="form-input" required placeholder="Ex: João da Silva">
+        </div>
+        
+        <div class="input-group">
+            <label>Tipo de Contrato</label>
+            <select name="tipo_contrato" class="form-select" required>
+                <option value="CLT">CLT (8h/dia - 44h/sem)</option>
+                <option value="Estagiário">Estagiário (6h/dia - 30h/sem)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Entrada</label>
+            <input type="time" name="entrada" class="form-input" value="08:00" required>
+        </div>
+        
+        <div class="input-group">
+            <label>Saída</label>
+            <input type="time" name="saida" class="form-input" value="17:30" required>
+        </div>
+        
+        <div class="input-group">
+            <label>Almoço</label>
+            <select name="almoco" class="form-select">
+                <option value="60">1 Hora</option>
+                <option value="30">30 Min</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <button type="submit" class="btn-add">Adicionar</button>
+        </div>
+    </form>
+</div>
+
+<div class="table-card">
+    <table class="emp-table">
+        <thead>
+            <tr>
+                <th>Colaborador</th>
+                <th>Contrato</th>
+                <th>Entrada</th>
+                <th>Saída</th>
+                <th>Almoço</th>
+                <th style="text-align: center;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in lista %}
+            <tr>
+                <td class="emp-name">{{ f.nome }}</td>
+                <td>
+                    {% if f.tipo_contrato == 'Estagiário' %}
+                        <span style="color: #047857; background: #d1fae5; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 13px;">Estagiário</span>
+                    {% else %}
+                        <span style="color: #1d4ed8; background: #dbeafe; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 13px;">CLT</span>
+                    {% endif %}
+                </td>
+                <td><span class="badge-time">{{ f.entrada }}</span></td>
+                <td><span class="badge-time">{{ f.saida }}</span></td>
+                <td>{{ f.almoco }} Min</td>
+                <td style="text-align: center;">
+                    <a href="/funcionarios/delete/{{ f.id }}" class="btn-delete" onclick="return confirm('Excluir {{ f.nome }}?');">Excluir</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

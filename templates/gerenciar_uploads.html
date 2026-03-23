@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .page-title { color: #1b5e20; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 12px; }
+
+    .table-card { background: #ffffff; border: 1px solid #e8f5e9; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+    .file-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .file-table th { background: #e8f5e9; color: #1b5e20; padding: 16px 20px; font-size: 14px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #c8e6c9; }
+    .file-table td { padding: 16px 20px; color: #334155; font-size: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .file-table tr:hover { background-color: #f4fbf5; }
+    .file-name { font-weight: 700; color: #1b5e20; display: flex; align-items: center; gap: 8px; }
+    
+    .btn-action { padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; margin-right: 5px; transition: all 0.2s; }
+    .btn-process { color: #ffffff; background: #22c55e; border: 1px solid #16a34a; }
+    .btn-process:hover { background: #16a34a; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2); }
+    
+    .btn-delete { color: #ef4444; background: #fef2f2; border: 1px solid #fee2e2; }
+    .btn-delete:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+    .empty-state { text-align: center; padding: 50px 20px; color: #64748b; font-size: 16px; }
+</style>
+
+<div class="page-header">
+    <h2 class="page-title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #22c55e;"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+        Meus Uploads (Arquivos)
+    </h2>
+</div>
+
+<div class="table-card">
+    <table class="file-table">
+        <thead>
+            <tr>
+                <th>Nome do Arquivo</th>
+                <th>Data do Upload</th>
+                <th>Tamanho</th>
+                <th style="text-align: right;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if arquivos|length == 0 %}
+            <tr>
+                <td colspan="4" class="empty-state">Nenhum arquivo Excel salvo no servidor no momento.</td>
+            </tr>
+            {% endif %}
+            
+            {% for arq in arquivos %}
+            <tr>
+                <td class="file-name">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    {{ arq.nome }}
+                </td>
+                <td>{{ arq.data_formatada }}</td>
+                <td>{{ arq.tamanho }} KB</td>
+                <td style="text-align: right;">
+                    <a href="/processar-upload/{{ arq.nome }}" class="btn-action btn-process" onclick="return confirm('Isso vai apagar os dados da tela principal e carregar esta planilha. Continuar?');">
+                        ▶ Carregar no Painel
+                    </a>
+                    <a href="/deletar-upload/{{ arq.nome }}" class="btn-action btn-delete" onclick="return confirm('Excluir {{ arq.nome }} permanentemente do servidor?');">
+                        Excluir
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
