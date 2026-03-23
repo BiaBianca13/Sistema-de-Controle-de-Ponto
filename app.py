@@ -4,15 +4,11 @@ import openpyxl
 import re
 import psycopg2.extras
 from datetime import datetime, date
-
 from flask import Flask, render_template, request, redirect, flash
 
 app = Flask(__name__)
 app.secret_key = "secret_assertividade_total"
 
-# ==========================================
-# CONFIGURAÇÃO DE CAMINHOS
-# ==========================================
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB = os.path.join(BASE_DIR, "ponto.db")
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -20,9 +16,6 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL:
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://")
 
-# ==========================================
-# FILTROS E UTILITÁRIOS
-# ==========================================
 @app.template_filter("tempo")
 def tempo(minutos):
     if minutos is None or minutos == 0:
@@ -48,9 +41,10 @@ def conectar():
         conn.row_factory = sqlite3.Row
         return conn
 
-# ==========================================
-# LÓGICA DE CÁLCULO
-# ==========================================
+def get_placeholder():
+    """Retorna o marcador de posição correto: %s para Postgres, ? para SQLite"""
+    return "%s" if DATABASE_URL else "?"
+
 def extrair_horas(texto):
     if not texto: return []
     linhas = str(texto).split("\n")
@@ -69,16 +63,14 @@ def analisar_batidas(batidas_str, nome, ent_cfg_str, sai_cfg_str, almoco_min, di
     ent_cfg = datetime.strptime(ent_cfg_str, "%H:%M")
     sai_cfg = datetime.strptime(sai_cfg_str, "%H:%M")
     
-    # Horário de Sexta-feira
     if dia_semana == 4 and sai_cfg_str == "17:30":
         sai_cfg = datetime.strptime("17:00", "%H:%M")
         
-    # JORNADA ESPERADA
-    if dia_semana >= 5: # Fim de semana não tem jornada esperada (Obrigatório = 0)
+    if dia_semana >= 5:
         esperado = 0
     else:
         if tipo_contrato == "Estagiário":
-            esperado = 360 # 6 horas exatas
+            esperado = 360
         else:
             esperado = int((sai_cfg - ent_cfg).total_seconds() / 60) - almoco_min
     
@@ -88,7 +80,6 @@ def analisar_batidas(batidas_str, nome, ent_cfg_str, sai_cfg_str, almoco_min, di
         
     horarios = sorted([datetime.strptime(h, "%H:%M") for h in batidas_str])
     
-    # Filtro anti-duplo clique
     filtrado = [horarios[0]]
     for h in horarios[1:]:
         if (h - filtrado[-1]).total_seconds() / 60 > 10:
@@ -131,7 +122,7 @@ def ler_excel(caminho):
         hoje = date.today()
         mes, ano = hoje.month, hoje.year
 
-    for r in range(1, ws.max_row):
+    for r in range(1, ws.max_row + 1):
         if ws.cell(r, 1).value == "ID":
             nome = ws.cell(r, 12).value
             linha_dias, linha_horas = r + 1, r + 3
@@ -149,15 +140,18 @@ def ler_excel(caminho):
 def criar_banco():
     conn = conectar()
     cur = conn.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS funcionarios(id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, entrada TEXT, saida TEXT, almoco INTEGER, valor_hora REAL)")
-    try:
-        cur.execute("ALTER TABLE funcionarios ADD COLUMN tipo_contrato TEXT DEFAULT 'CLT'")
-    except:
-        pass
-    cur.execute("CREATE TABLE IF NOT EXISTS registros(id INTEGER PRIMARY KEY AUTOINCREMENT, funcionario TEXT, data TEXT, batidas TEXT, minutos_trabalhados INTEGER, minutos_esperados INTEGER, falta INTEGER, observacao TEXT)")
+    
+    # Lógica hibrida para ID Autoincrement
+    id_type = "SERIAL PRIMARY KEY" if DATABASE_URL else "INTEGER PRIMARY KEY AUTOINCREMENT"
+    
+    cur.execute(f"CREATE TABLE IF NOT EXISTS funcionarios(id {id_type}, nome TEXT UNIQUE, entrada TEXT, saida TEXT, almoco INTEGER, valor_hora REAL, tipo_contrato TEXT DEFAULT 'CLT')")
+    
+    cur.execute(f"CREATE TABLE IF NOT EXISTS registros(id {id_type}, funcionario TEXT, data TEXT, batidas TEXT, minutos_trabalhados INTEGER, minutos_esperados INTEGER, falta INTEGER, observacao TEXT)")
+    
     conn.commit()
     conn.close()
 
+# Executa a criação ao iniciar
 criar_banco()
 
 # ==========================================
@@ -181,7 +175,6 @@ def dashboard():
         resumo[nome]["esperado"] += d["minutos_esperados"]
         resumo[nome]["faltas"] += d["falta"]
         
-        # Saldo do painel ignora o Sábado (5) e Domingo (6)
         dt = datetime.strptime(d["data"], "%Y-%m-%d").date()
         if dt.weekday() < 5:
             resumo[nome]["saldo"] += (d["minutos_trabalhados"] - d["minutos_esperados"])
@@ -200,9 +193,12 @@ def upload():
         registros = ler_excel(caminho)
         
         conn = conectar(); cur = conn.cursor()
+        p = get_placeholder()
+        
         cur.execute("DELETE FROM registros") 
         for r in registros:
-            cur.execute("SELECT * FROM funcionarios WHERE UPPER(nome)=UPPER(?)", (r["nome"],))
+            # Uso de UPPER para busca insensível a maiúsculas
+            cur.execute(f"SELECT * FROM funcionarios WHERE UPPER(nome)=UPPER({p})", (r["nome"],))
             f = cur.fetchone()
             ent = f["entrada"] if f else "08:00"
             sai = f["saida"] if f else "17:30"
@@ -211,7 +207,7 @@ def upload():
             
             min_t, min_e, falta, obs = analisar_batidas(r["batidas"], r["nome"], ent, sai, alm, r["data"].weekday(), tipo)
             
-            cur.execute("INSERT INTO registros(funcionario, data, batidas, minutos_trabalhados, minutos_esperados, falta, observacao) VALUES (?,?,?,?,?,?,?)",
+            cur.execute(f"INSERT INTO registros(funcionario, data, batidas, minutos_trabalhados, minutos_esperados, falta, observacao) VALUES ({p},{p},{p},{p},{p},{p},{p})",
                 (r["nome"], str(r["data"]), "\n".join(r["batidas"]), min_t, min_e, falta, obs))
         conn.commit(); conn.close()
         flash("Planilha processada com sucesso!")
@@ -221,7 +217,8 @@ def upload():
 @app.route("/relatorio/<nome>")
 def relatorio_individual(nome):
     conn = conectar(); cur = conn.cursor()
-    cur.execute("SELECT * FROM registros WHERE funcionario = ? ORDER BY data", (nome,))
+    p = get_placeholder()
+    cur.execute(f"SELECT * FROM registros WHERE funcionario = {p} ORDER BY data", (nome,))
     registros = cur.fetchall(); conn.close()
     
     semanas = {}
@@ -232,8 +229,7 @@ def relatorio_individual(nome):
 
     for r in registros:
         dt = datetime.strptime(r["data"], "%Y-%m-%d").date()
-        
-        if dt.weekday() == 6: continue # Remove Domingo
+        if dt.weekday() == 6: continue 
 
         chave = f"{dt.isocalendar()[0]}-W{dt.isocalendar()[1]}"
         if chave not in semanas:
@@ -242,7 +238,7 @@ def relatorio_individual(nome):
         total_esperado_mes += r["minutos_esperados"]
         total_trabalhado_mes += r["minutos_trabalhados"]
 
-        if dt.weekday() == 5: # Sábado
+        if dt.weekday() == 5: 
             saldo_diario = 0
             obs = "Remunerado por fora" if r["minutos_trabalhados"] > 0 else "Sábado"
         else:
@@ -292,30 +288,30 @@ def add_func():
     sai = request.form["saida"]
     alm = request.form["almoco"]
     tipo = request.form.get("tipo_contrato", "CLT")
+    p = get_placeholder()
     
     conn = conectar(); cur = conn.cursor()
     try:
-        cur.execute("INSERT INTO funcionarios (nome,entrada,saida,almoco,valor_hora,tipo_contrato) VALUES(?,?,?,?,?,?)", (nome,ent,sai,alm,0,tipo))
-    except: pass
-    conn.commit(); conn.close()
+        cur.execute(f"INSERT INTO funcionarios (nome,entrada,saida,almoco,valor_hora,tipo_contrato) VALUES({p},{p},{p},{p},{p},{p})", (nome,ent,sai,alm,0,tipo))
+        conn.commit()
+    except Exception as e:
+        print(f"Erro ao adicionar: {e}")
+    conn.close()
     flash(f"Funcionário {nome} ({tipo}) adicionado com sucesso!")
     return redirect("/funcionarios")
 
 @app.route("/funcionarios/delete/<int:id>")
 def deletar_funcionario(id):
     conn = conectar(); cur = conn.cursor()
-    cur.execute("DELETE FROM funcionarios WHERE id=?", (id,))
+    p = get_placeholder()
+    cur.execute(f"DELETE FROM funcionarios WHERE id={p}", (id,))
     conn.commit(); conn.close()
     return redirect("/funcionarios")
 
-# ==========================================
-# GERENCIAMENTO DE UPLOADS (ARQUIVOS EXCEL)
-# ==========================================
 @app.route("/gerenciar-uploads")
 def gerenciar_uploads():
     pasta_uploads = os.path.join(BASE_DIR, "uploads")
     os.makedirs(pasta_uploads, exist_ok=True)
-    
     arquivos = []
     for nome_arquivo in os.listdir(pasta_uploads):
         caminho_completo = os.path.join(pasta_uploads, nome_arquivo)
@@ -323,14 +319,7 @@ def gerenciar_uploads():
             tamanho_kb = os.path.getsize(caminho_completo) / 1024
             data_mod = os.path.getmtime(caminho_completo)
             data_formatada = datetime.fromtimestamp(data_mod).strftime('%d/%m/%Y %H:%M')
-            
-            arquivos.append({
-                "nome": nome_arquivo,
-                "tamanho": round(tamanho_kb, 1),
-                "data_formatada": data_formatada,
-                "timestamp": data_mod
-            })
-            
+            arquivos.append({"nome": nome_arquivo, "tamanho": round(tamanho_kb, 1), "data_formatada": data_formatada, "timestamp": data_mod})
     arquivos.sort(key=lambda x: x["timestamp"], reverse=True)
     return render_template("gerenciar_uploads.html", arquivos=arquivos)
 
@@ -347,23 +336,20 @@ def processar_upload(nome_arquivo):
     caminho_completo = os.path.join(BASE_DIR, "uploads", nome_arquivo)
     if os.path.exists(caminho_completo):
         registros = ler_excel(caminho_completo)
-        
         conn = conectar(); cur = conn.cursor()
+        p = get_placeholder()
         cur.execute("DELETE FROM registros") 
         for r in registros:
-            cur.execute("SELECT * FROM funcionarios WHERE UPPER(nome)=UPPER(?)", (r["nome"],))
+            cur.execute(f"SELECT * FROM funcionarios WHERE UPPER(nome)=UPPER({p})", (r["nome"],))
             f = cur.fetchone()
             ent = f["entrada"] if f else "08:00"
             sai = f["saida"] if f else "17:30"
             alm = f["almoco"] if f else 60
             tipo = dict(f).get("tipo_contrato", "CLT") if f else "CLT"
-            
             min_t, min_e, falta, obs = analisar_batidas(r["batidas"], r["nome"], ent, sai, alm, r["data"].weekday(), tipo)
-            
-            cur.execute("INSERT INTO registros(funcionario, data, batidas, minutos_trabalhados, minutos_esperados, falta, observacao) VALUES (?,?,?,?,?,?,?)",
+            cur.execute(f"INSERT INTO registros(funcionario, data, batidas, minutos_trabalhados, minutos_esperados, falta, observacao) VALUES ({p},{p},{p},{p},{p},{p},{p})",
                 (r["nome"], str(r["data"]), "\n".join(r["batidas"]), min_t, min_e, falta, obs))
         conn.commit(); conn.close()
-        
         flash(f"Planilha {nome_arquivo} carregada no sistema com sucesso!")
     return redirect("/")
 
