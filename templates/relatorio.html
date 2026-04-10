@@ -19,6 +19,20 @@
 
     .print-only-header { display: none; }
 
+    /* CAIXA DE INFORMAÇÕES DO COLABORADOR (Nome no canto esquerdo) */
+    .employee-info-box {
+        display: flex;
+        justify-content: flex-start; /* Voltou para o canto! */
+        background: #f4fbf5;
+        padding: 12px 20px;
+        border: 1px solid #c8e6c9;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        font-size: 16px;
+        color: #1b5e20;
+    }
+    .info-item strong { color: #2e7d32; margin-right: 8px; text-transform: uppercase; font-size: 14px; }
+
     .week-title { color: #2e7d32; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-top: 0; }
     
     .table-rel { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
@@ -49,7 +63,6 @@
         
         body { background: white !important; padding: 8mm !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         
-        /* AQUI ESTÁ A MÁGICA: O cabeçalho da tela (com o nome) desaparece na impressão! */
         .sidebar, .print-header { display: none !important; }
         .main-content { padding: 0 !important; margin: 0 !important; background: white !important;}
         
@@ -58,8 +71,7 @@
             border: none !important; 
             padding: 0 !important; 
             background: white !important; 
-            /* Zoom ajustado para comportar o novo espaço de assinatura gigante */
-            zoom: 0.66 !important; 
+            zoom: 0.65 !important; 
         }
 
         .print-only-header { display: flex !important; justify-content: center !important; align-items: center !important; border-bottom: 2px solid #1b5e20 !important; padding-bottom: 8px !important; margin-bottom: 12px !important; width: 100% !important; position: relative !important; }
@@ -67,21 +79,22 @@
         .print-title { text-align: center !important; width: 100% !important; }
         .print-title h2 { margin: 0 !important; color: #1b5e20 !important; font-size: 24px !important; font-weight: 800 !important; text-transform: uppercase !important; }
         
-        /* ESPAÇAMENTOS MILIMETRICAMENTE CALCULADOS */
-        .week-title { font-size: 14px !important; margin: 8px 0 4px 0 !important; padding-bottom: 2px !important; }
+        /* Nome volta pro canto esquerdo na impressão também */
+        .employee-info-box { margin-bottom: 15px !important; padding: 8px 15px !important; font-size: 14px !important; justify-content: flex-start !important; }
+
+        .week-title { font-size: 14px !important; margin: 6px 0 4px 0 !important; padding-bottom: 2px !important; }
         .table-rel { margin-bottom: 8px !important; }
         .table-rel th, .table-rel td { padding: 4px !important; font-size: 12px !important; } 
         .table-rel th { background: #f4fbf5 !important; color: #1b5e20 !important; }
         
         .week-counters { padding: 6px !important; margin-bottom: 15px !important; font-size: 12px !important; border-color: #c8e6c9 !important; background: #f4fbf5 !important; }
         
-        .final-counters { margin-top: 15px !important; padding: 15px !important; gap: 12px !important; border-color: #c8e6c9 !important; background: #e8f5e9 !important; }
+        .final-counters { margin-top: 10px !important; padding: 15px !important; gap: 12px !important; border-color: #c8e6c9 !important; background: #e8f5e9 !important; }
         .fc-item span { font-size: 12px !important; margin-bottom: 4px !important; }
         .fc-item strong { font-size: 16px !important; }
         .fc-divider-vertical { height: 40px !important; }
         
-        /* AUMENTO DO ESPAÇO DA ASSINATURA À CANETA */
-        .signatures { margin-top: 65px !important; margin-bottom: 0 !important;} 
+        .signatures { margin-top: 55px !important; margin-bottom: 0 !important;} 
         .signature-line { font-size: 14px !important; padding-top: 10px !important; }
         
         table, .week-counters, .final-counters, .signatures { page-break-inside: avoid; }
@@ -90,7 +103,7 @@
 
 <div class="print-header">
     <h2 style="color: #1b5e20; margin: 0; font-size: 26px;">
-        Relatório de Ponto: <span style="color: #16a34a;">{{ nome }}</span>
+        Relatório de Ponto
     </h2>
     <button class="btn-imprimir" onclick="window.print()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -107,8 +120,12 @@
         </div>
     </div>
 
+    <div class="employee-info-box">
+        <div class="info-item"><strong>Colaborador(a):</strong> {{ nome }}</div>
+    </div>
+
     {% for chave, s in semanas.items() %}
-    <h3 class="week-title">Semana {{ chave.split('-W')[1] }}</h3>
+    <h3 class="week-title">Semana {{ loop.index }}</h3>
     
     <table class="table-rel">
         <thead>
@@ -170,18 +187,16 @@
         <div class="fc-divider"></div>
 
         <div class="fc-row" style="justify-content: center; gap: 50px;">
-            
             {% if total_trabalhado_mes > total_esperado_mes %}
             <div class="fc-item">
                 <span>Total Horas Extras (+)</span>
                 <strong style="color: #16a34a;">{{ total_positivo | tempo }}</strong>
             </div>
-            
             <div class="fc-divider-vertical"></div>
             {% endif %}
             
             <div class="fc-item">
-                <span>Saldo dentro do horário solicitado pela empresa</span>
+                <span>Baseado nas 44 horas semanais, faltaram</span>
                 {% set cor_geral = '#16a34a' if total_restante > 0 else ('#dc2626' if total_restante < 0 else '#475569') %}
                 <strong style="color: {{ cor_geral }}; font-size: 20px;">{{ total_restante | tempo }}</strong>
             </div>
